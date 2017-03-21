@@ -31,6 +31,14 @@ app.use(require('express-session')({
 app.use(passport.initialize());
 app.use(passport.session());
 
+passport.serializeUser(function(user, cb) {
+  cb(null, user);
+});
+
+passport.deserializeUser(function(obj, cb) {
+  cb(null, obj);
+});
+
 passport.use(new FacebookStrategy({
     clientID: KEYS.FB_APP_CLIENTID,
     clientSecret: KEYS.FB_APP_SECRET,
@@ -38,35 +46,20 @@ passport.use(new FacebookStrategy({
     profileFields: ['id', 'email', 'displayName', 'gender', 'link', 'locale', 'name', 'timezone', 'updated_time', 'verified'],
   },
   function(accessToken, refreshToken, profile, cb) {
-    process.nextTick(function() {
-
-      console.log('profile=======', profile._json);
-
-      let userInfo = {
-        name: profile._json.name,
-        fb_id: profile._json.id,
-        // token: accessToken,
-        email: profile._json.email
-      };
-      console.log('userInfo=====', userInfo);
-      // dbHelpers.findOrCreateUser(userInfo, function(err, user) {
-      //   console.log('findorcreateuser result======', user);
-      //   req.session.user = user.fb_id;
-      //   // next();
-      // });
-        console.log('done with creating User');
+    // console.log('profile=======', profile._json);
+    let userInfo = {
+      name: profile._json.name,
+      fb_id: profile._json.id,
+      token: accessToken,
+      email: profile._json.email
+    };
+    // console.log('userInfo=====', userInfo);
+    dbHelpers.findOrCreateUser(userInfo, function(err, user) {
+      console.log('findorcreateuser result======', user);
     });
+    return cb(null, userInfo);
   }
 ));
-
-app.get('/profile', function(req, res) {
-  console.log('======req.session.user is', req.session.user);
-  if (!req.session.user) {
-    res.redirect('/login');
-  } else {
-    console.log('session is valid=========');
-  }
-})
 
 // route for facebook authentication and login
 app.get('/auth/facebook',
@@ -76,32 +69,29 @@ app.get('/auth/facebook',
 app.get('/auth/facebook/callback',
   passport.authenticate('facebook', { failureRedirect: '/login' }),
   function(req, res) {
-    console.log('Successful facebook callback! ==========');
     // Successful authentication, redirect home.
     res.redirect('/');
 });
 
-// // route middleware to make sure a user is logged in
-// function isLoggedIn(req, res, next) {
-
-//   // if user is authenticated in the session, carry on
-//   if (req.isAuthenticated())
-//       return next();
-
-
-//   res.redirect('/');
-// }
-
-
-
-
-passport.serializeUser(function(user, cb) {
-  cb(null, user);
+app.get('/', function(req, res) {
+  console.log('======req.user is', req.user, 'req.userInfo', req.userInfo);
+  if (!req.user) {
+    res.redirect('/login');
+  } else {
+    console.log('session is valid=========');
+  }
 });
 
-passport.deserializeUser(function(obj, cb) {
-  cb(null, obj);
+app.get('/signout', function(req, res) {
+  console.log('=====req.user b4 delete', req.user);
+  delete req.user;
+  console.log('=====req.user after delete', req.user);
+  res.send('logged out');
 });
+
+// app.get('/auth', function(req, res) {
+//   if
+// });
 
 app.get('/testing', function(req, res) {
   res.send('hello world');
