@@ -9,7 +9,7 @@
   },
   "scripts": {
     "webpack": "webpack -d --watch",
-    "start": "nodemon server/index.js"
+    "start": "nodemon server/index.js & webpack -d --watch"
   },
   "dependencies": {
     "babel-cli": "^6.7.5",
