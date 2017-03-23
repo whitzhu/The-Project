@@ -19,12 +19,6 @@ const gVision = require('./api/vision.js');
 //
 var localStorage = {};
 
-const Promise = require('bluebird');
-const fs = Promise.promisifyAll(require('fs'));
-//Google cloud vision setup:
-const gVision = require('./api/vision.js');
-
-
 app.use( bodyParser.json() );
 app.use(cors());
 app.use(express.static(__dirname + '/../public/dist'));
@@ -190,7 +184,7 @@ app.post('/upload/delete', function(req, res) {
 
 //gVision.spliceReceipt produces an object of item : price pairs
 app.post('/vision', function(req, res) {
-  let image = req.body.receipt || __dirname + '/api/testReceipts/test3.jpg'; 
+  let image = req.body.receipt || __dirname + '/api/testReceipts/test3.jpg';
   gVision.promisifiedDetectText(image)
   .then(function(results) {
     let allItems = results[0];
